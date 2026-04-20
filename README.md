@@ -4,6 +4,8 @@
 
 서버 로그를 실시간으로 수집하고, 통계적 방법(Z-score)으로 이상 트래픽을 자동 감지하는 시스템입니다.
 
+이 프로젝트는 **Vibe Coding** 철학을 바탕으로 개발되었습니다. 개발자가 프로젝트의 전체적인 '바이브'와 기획, 수학적 직관에 집중하고, AI 비서와 실시간 협업을 통해 아이디어를 신속하게 실제 동작하는 시스템으로 구현했습니다.
+
 ![Log-Guard Dashboard Preview](assets/img/dashboard.png)
 
 ## 빠른 시작
@@ -15,7 +17,7 @@
 source venv/bin/activate
 
 # 통합 서버 실행 (Redis 시작 + 백엔드 + 브라우저 열기)
-python run.py
+python3 run.py
 ```
 
 ## 아키텍처
