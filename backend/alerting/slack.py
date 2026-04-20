@@ -10,8 +10,8 @@ from datetime import datetime
 
 import httpx
 
-from log_guard.config import settings
-from log_guard.engine.models import AnomalyAlert
+from backend.config import settings
+from backend.engine.models import AnomalyAlert
 
 logger = logging.getLogger(__name__)
 

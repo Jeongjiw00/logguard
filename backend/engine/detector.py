@@ -22,8 +22,8 @@ from typing import Deque, List, Optional
 import numpy as np
 import pandas as pd
 
-from log_guard.config import settings
-from log_guard.engine.models import AnomalyAlert, AnomalyType, LogEntry
+from backend.config import settings
+from backend.engine.models import AnomalyAlert, AnomalyType, LogEntry
 
 logger = logging.getLogger(__name__)
 

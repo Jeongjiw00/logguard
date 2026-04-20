@@ -11,9 +11,9 @@ import logging
 
 import redis.asyncio as aioredis
 
-from log_guard.config import settings
-from log_guard.engine.detector import AnomalyDetector
-from log_guard.engine.models import LogEntry
+from backend.config import settings
+from backend.engine.detector import AnomalyDetector
+from backend.engine.models import LogEntry
 
 logger = logging.getLogger(__name__)
 

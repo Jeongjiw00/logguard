@@ -2,7 +2,7 @@
 Log Generator 단위 테스트
 """
 
-from log_guard.producer.generator import generate_anomaly_log, generate_normal_log
+from backend.producer.generator import generate_anomaly_log, generate_normal_log
 
 
 class TestNormalLogGenerator:
@@ -52,7 +52,7 @@ class TestAnomalyLogGenerator:
 
     def test_anomaly_uses_attack_paths(self):
         """이상 로그는 공격성 경로를 사용해야 함"""
-        from log_guard.producer.generator import ATTACK_PATHS
+        from backend.producer.generator import ATTACK_PATHS
 
         for _ in range(50):
             log = generate_anomaly_log()

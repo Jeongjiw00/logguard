@@ -16,13 +16,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
-from log_guard.alerting.slack import send_slack_alert
-from log_guard.api.routes import router, set_detector
-from log_guard.api.websocket import manager
-from log_guard.engine.consumer import LogConsumer
-from log_guard.engine.detector import AnomalyDetector
-from log_guard.engine.models import AnomalyAlert
-from log_guard.producer.generator import run_producer
+from backend.alerting.slack import send_slack_alert
+from backend.api.routes import router, set_detector
+from backend.api.websocket import manager
+from backend.engine.consumer import LogConsumer
+from backend.engine.detector import AnomalyDetector
+from backend.engine.models import AnomalyAlert
+from backend.producer.generator import run_producer
 
 # 프론트엔드 디렉토리 경로
 FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend"

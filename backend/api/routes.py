@@ -48,7 +48,7 @@ async def get_recent_anomalies(limit: int = 20):
 @router.get("/config")
 async def get_config():
     """현재 탐지 설정값"""
-    from log_guard.config import settings
+    from backend.config import settings
 
     return {
         "threshold": settings.anomaly_threshold,

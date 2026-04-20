@@ -4,8 +4,8 @@ Anomaly Detector 단위 테스트
 
 from datetime import datetime, timezone, timedelta
 
-from log_guard.engine.detector import AnomalyDetector
-from log_guard.engine.models import AnomalyType, LogEntry
+from backend.engine.detector import AnomalyDetector
+from backend.engine.models import AnomalyType, LogEntry
 
 
 def _make_log(response_time_ms: float = 50.0, status_code: int = 200, seconds_ago: int = 0) -> LogEntry:

@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 
 import redis.asyncio as aioredis
 
-from log_guard.config import settings
+from backend.config import settings
 
 logger = logging.getLogger(__name__)
 

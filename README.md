@@ -45,7 +45,7 @@ docker compose up -d
 ### 3. 서버 실행
 
 ```bash
-uvicorn log_guard.api.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn backend.api.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 서버가 시작되면 자동으로:
