@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Log-Guard: Real-time Log Anomaly Detection Dashboard">
+    <title>Log-Guard Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header id="header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                </div>
+                <h1>Log-Guard</h1>
+            </div>
+            <span class="tagline">Real-time Anomaly Detection</span>
+        </div>
+        <div class="header-right">
+            <div id="connection-status" class="status-badge disconnected">
+                <span class="status-dot"></span>
+                <span class="status-text">Disconnected</span>
+            </div>
+            <div class="header-time">
+                <span id="current-time">--:--:--</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- Stats Cards Row -->
+        <section class="stats-row" id="stats-section">
+            <div class="stat-card" id="card-total-logs">
+                <div class="stat-header">
+                    <span class="stat-label">Total Logs</span>
+                    <svg class="stat-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                </div>
+                <div class="stat-value" id="total-logs">0</div>
+                <div class="stat-trend" id="total-logs-trend">Waiting for data...</div>
+            </div>
+
+            <div class="stat-card" id="card-logs-per-sec">
+                <div class="stat-header">
+                    <span class="stat-label">Logs / sec</span>
+                    <svg class="stat-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                </div>
+                <div class="stat-value" id="logs-per-sec">0</div>
+                <div class="stat-trend" id="logs-per-sec-trend">--</div>
+            </div>
+
+            <div class="stat-card" id="card-avg-latency">
+                <div class="stat-header">
+                    <span class="stat-label">Avg Latency</span>
+                    <svg class="stat-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <div class="stat-value" id="avg-latency">0<span class="stat-unit">ms</span></div>
+                <div class="stat-trend" id="avg-latency-trend">--</div>
+            </div>
+
+            <div class="stat-card" id="card-error-rate">
+                <div class="stat-header">
+                    <span class="stat-label">Error Rate</span>
+                    <svg class="stat-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <div class="stat-value" id="error-rate">0<span class="stat-unit">%</span></div>
+                <div class="stat-trend" id="error-rate-trend">--</div>
+            </div>
+
+            <div class="stat-card anomaly-card" id="card-anomalies">
+                <div class="stat-header">
+                    <span class="stat-label">Anomalies</span>
+                    <svg class="stat-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                </div>
+                <div class="stat-value" id="anomaly-count">0</div>
+                <div class="stat-trend" id="anomaly-trend">No anomalies detected</div>
+            </div>
+        </section>
+
+        <!-- Charts Row -->
+        <section class="charts-row">
+            <div class="chart-card wide" id="traffic-chart-card">
+                <div class="chart-header">
+                    <h2>Traffic Overview</h2>
+                    <div class="chart-legend">
+                        <span class="legend-item"><span class="legend-dot normal"></span>Normal</span>
+                        <span class="legend-item"><span class="legend-dot anomaly"></span>Anomaly</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="traffic-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="charts-row two-col">
+            <div class="chart-card" id="latency-chart-card">
+                <div class="chart-header">
+                    <h2>Response Latency</h2>
+                    <span class="chart-subtitle">Rolling window (ms)</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="latency-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card" id="error-chart-card">
+                <div class="chart-header">
+                    <h2>Error Rate</h2>
+                    <span class="chart-subtitle">4xx/5xx percentage</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="error-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Anomaly Alerts Feed -->
+        <section class="alerts-section" id="alerts-section">
+            <div class="alerts-header">
+                <h2>Anomaly Alerts</h2>
+                <button id="clear-alerts-btn" class="btn-clear">Clear All</button>
+            </div>
+            <div id="alerts-feed" class="alerts-feed">
+                <div class="alert-empty">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <polyline points="9 12 12 15 16 10"/>
+                    </svg>
+                    <p>No anomalies detected yet. System is monitoring...</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
