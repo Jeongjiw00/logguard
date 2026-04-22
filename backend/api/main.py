@@ -118,15 +118,9 @@ app.add_middleware(
 # REST API 라우트 등록
 app.include_router(router)
 
-# 정적 파일 서빙 (CSS, JS)
-app.mount("/static", StaticFiles(directory=str(DOCS_DIR)), name="static")
-
-
-@app.get("/", response_class=HTMLResponse)
-async def serve_dashboard():
-    """대시보드 메인 페이지"""
-    index_path = DOCS_DIR / "index.html"
-    return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
+# 정적 파일 서빙 (GitHub Pages 호환을 위해 루트 경로에 연결)
+from fastapi.staticfiles import StaticFiles
+app.mount("/", StaticFiles(directory=str(DOCS_DIR), html=True), name="static")
 
 
 @app.websocket("/ws")
