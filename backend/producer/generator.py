@@ -11,9 +11,11 @@ import json
 import logging
 import random
 import time
+import socket
 from datetime import datetime, timezone
 
 import redis.asyncio as aioredis
+import redis.exceptions
 
 from backend.config import settings
 
@@ -103,44 +105,53 @@ async def run_producer(
     log_count = 0
     last_burst_time = time.time()
 
-    try:
-        logger.info("Log Producer 루프 진입 시도 중...")
-        while True:
-            now = time.time()
-            is_burst = (now - last_burst_time) >= burst_interval
+    retry_count = 0
+    while True:
+        try:
+            pool = aioredis.ConnectionPool.from_url(
+                f"redis://{settings.redis_host}:{settings.redis_port}/{settings.redis_db}"
+            )
+            r = aioredis.Redis(connection_pool=pool)
+            
+            logger.info("Log Producer 시작 - Redis %s:%s (시도: %d)", settings.redis_host, settings.redis_port, retry_count + 1)
+            
+            logger.info("Log Producer 루프 진입 시도 중...")
+            while True:
+                now = time.time()
+                is_burst = (now - last_burst_time) >= burst_interval
 
-            if is_burst:
-                # ─── 이상 트래픽 급증 (Burst) ───
-                logger.warning("이상 트래픽 급증 시작! (지속 시간: %ds)", burst_duration)
-                burst_end = now + burst_duration
-
-                while time.time() < burst_end:
-                    log_entry = generate_anomaly_log()
+                if is_burst:
+                    # ... (이상 트래픽 로직 생략되지 않도록 전체 포함)
+                    logger.warning("이상 트래픽 급증 시작! (지속 시간: %ds)", burst_duration)
+                    burst_end = now + burst_duration
+                    while time.time() < burst_end:
+                        log_entry = generate_anomaly_log()
+                        await r.lpush(settings.redis_queue_key, json.dumps(log_entry))
+                        log_count += 1
+                        await asyncio.sleep(burst_rate)
+                    logger.warning("이상 트래픽 급증 종료 - 총 %d건 생성됨", log_count)
+                    last_burst_time = time.time()
+                else:
+                    log_entry = generate_normal_log()
                     await r.lpush(settings.redis_queue_key, json.dumps(log_entry))
                     log_count += 1
-                    await asyncio.sleep(burst_rate)
+                    if log_count % 10 == 0:
+                        queue_len = await r.llen(settings.redis_queue_key)
+                        logger.info("디버그: 로그 %d건 생성됨 | 큐 대기: %d건", log_count, queue_len)
+                    await asyncio.sleep(0.1)
 
-                logger.warning("이상 트래픽 급증 종료 - 총 %d건 생성됨", log_count)
-                last_burst_time = time.time()
-            else:
-                # ─── 정상 트래픽 ───
-                log_entry = generate_normal_log()
-                await r.lpush(settings.redis_queue_key, json.dumps(log_entry))
-                log_count += 1
+        except (redis.exceptions.ConnectionError, socket.gaierror) as e:
+            retry_count += 1
+            logger.error(f"Redis 연결 실패 (재시도 {retry_count}회): {e}")
+            await asyncio.sleep(2) # 2초 대기 후 재시도
+            continue
+        except Exception as e:
+            logger.error(f"Log Producer 알 수 없는 에러: {e}", exc_info=True)
+            break
+        finally:
+            await r.aclose()
+            await pool.aclose()
 
-
-                if log_count % 10 == 0: # 100건 -> 10건으로 조정
-                    queue_len = await r.llen(settings.redis_queue_key)
-                    logger.info("디버그: 로그 %d건 생성됨 | 큐 대기: %d건", log_count, queue_len)
-
-                await asyncio.sleep(0.1)
-
-    except Exception as e:
-        logger.error("Log Producer 치명적 에러 발생: %s", str(e), exc_info=True)
-    finally:
-        logger.info("Log Producer 종료 시퀀스 진입")
-        await r.aclose()
-        await pool.aclose()
 
 
 

@@ -1,89 +1,78 @@
-# Log-Guard
+# Log-Guard: AI 기반 실시간 로그 이상 탐지 시스템
 
-**Real-time Log Anomaly Detection System using Z-score Analysis**
-
-서버 로그를 실시간으로 수집하고, 통계적 방법(Z-score)으로 이상 트래픽을 자동 감지하는 시스템입니다.
-
-이 프로젝트는 **Vibe Coding** 철학을 바탕으로 개발되었으며, 로컬 환경을 넘어 **쿠버네티스(Kubernetes)** 클러스터 상에서의 운영 및 확장성까지 고려하여 설계되었습니다.
+> **"Vibe Coding" 철학으로 완성된 지능형 보안 인프라.**  
+> 단순한 분석을 넘어, 쿠버네티스 기반의 클러스터 환경과 n8n 자동화 워크플로우를 결합한 차세대 로그 감시 시스템입니다.
 
 ![Log-Guard Dashboard Preview](assets/img/dashboard.png)
 
-## 빠른 시작
+## 실행 모드 (Experience Levels)
 
-### 모드 1: 로컬 통합 실행 (Easy)
+### 🟢 모드 1: 로컬 통합 실행 (Easy)
+가장 빠르게 시스템을 체험해 볼 수 있는 모드입니다. 단 한 줄의 명령어로 데이터 생성부터 대시보드 확인까지 가능합니다.
 ```bash
-# Redis(Brew) + Backend + Browser 자동 실행
 python3 run.py
 ```
 
-### 모드 2: 쿠버네티스 배포 (Advanced) ☸️
+### 🔵 모드 2: 쿠버네티스 클라우드 네이티브 (Expert)
+`Minikube` 기반의 로컬 클러스터에 전체 인프라를 배포하여 대규모 환경을 시뮬레이션합니다.
+- **Containerization**: Docker를 활용한 고효율 이미지 빌드.
+- **Orchestration**: Kubernetes 기반의 자동 복구 및 확장성 확보.
+- **One-Click Deployment**: `run-k8s.py`를 통한 복잡한 인프라 배포 자동화.
 ```bash
-# Minikube + K8s Manifest + Image Build + Service 자동 실행
 python3 run-k8s.py
 ```
 
-## 🏗️ 아키텍처 및 클라우드 네이티브 설계
+### 🟣 모드 3: Intelligent Automation (n8n)
+이상 징후 발생 시 자동으로 대응 워크플로우를 실행하여 비즈니스 가치를 더합니다.
+- **n8n Workflow**: 이상 탐지 즉시 Webhook을 통해 자동화 시나리오 트리거.
+- **Real-time Alerting**: Gmail SMTP를 연동한 HTML 기반 보안 경고 리포트 자동 발송.
+
+```bash
+# n8n 대시보드 및 워크플로우 편집기 열기
+minikube service n8n-service
+```
+
+![n8n Workflow Setup](assets/img/n8n.png)
+*n8n을 통한 지능형 알림 워크플로우 설계*
+
+![Email Alert Result](assets/img/n8n_send_email.png)
+*이상 탐지 시 자동으로 발송되는 HTML 이메일 결과*
+
+---
+
+## 🏗️ 시스템 아키텍처
 
 ```mermaid
-graph LR
-    A["Log Producer"] -->|lpush| B["Redis (Queue)"]
-    B -->|brpop| C["Detection Engine"]
-    C -->|Z-score| D{"Anomaly?"}
-    D -->|Yes| E["Slack/Dashboard"]
+graph TD
+    A[Log Generator] -->|Log Stream| B(Redis Queue)
+    B --> C{Anomaly Detector}
+    C -->|Normal| D[Dashboard UI]
+    C -->|Anomaly| E[Slack/n8n Alert]
+    E --> F[Gmail Notification]
     
     subgraph "Kubernetes Cluster"
     B
     C
+    D
     end
 ```
 
-### Kubernetes 인프라 구성
 - **Deployment**: 백엔드 서버의 고가용성(High Availability) 보장 (Multi-replica 구성)
-- **Service (NodePort)**: 클러스터 외부와 백엔드 서버 간의 연결 통신
-- **Service Discovery**: `redis-service` 이름을 통한 내부 DNS 기반 마이크로서비스 통신
-- **Containerization**: `python:3.9-slim` 기반의 최적화된 도커 이미지
+- **ServiceDiscovery**: `redis-service`, `n8n-service` 이름을 통한 내부 DNS 기반 마이크로서비스 통신.
+- **Anomaly Detection Engine**: Z-Score 기반의 통계적 변이 추적 알고리즘 탑재.
+
+---
+
+## Vibe Coding & Philosophy
+이 프로젝트는 AI 비서와 개발자가 **'Vibe'**를 맞춰가며 설계되었습니다. 
+단순 코드 작성을 넘어 **기획 -> 수학적 알고리즘 설계 -> 인프라 구축 -> 자동화 파이프라인**까지의 전 과정을 AI와 상호작용하며 민첩하게 구현해내는 현대적인 개발 방식을 지향합니다.
 
 ## 기술 스택
-
-- **Backend**: Python 3.9+ / FastAPI / Pandas / NumPy
-- **Frontend**: Vanilla JS / Chart.js (CDN) / CSS3 (Glassmorphism)
-- **Infrastructure**: **Kubernetes (Minikube)**, **Docker**, Redis
-- **Monitoring**: WebSocket Real-time Streaming, Slack Anomaly Alerts
-
----
-
-## 상세 설정 가이드
-
-### 1. 환경 설정
-```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-```
-
-### 2. 수동 쿠버네티스 배포
-스크립트 없이 수동으로 제어하고 싶을 때:
-```bash
-# YAML 파일 적용
-kubectl apply -f k8s/
-
-# 상태 확인
-kubectl get pods
-kubectl get services
-
-# 대시보드 접속 주소 확인
-minikube service backend-service
-```
+- **Backend**: Python 3.9+, FastAPI
+- **Data**: Pandas, NumPy (Statistical Analysis)
+- **Infra**: Docker, Kubernetes (Minikube)
+- **Automation**: n8n, Redis
+- **Frontend**: HTML5, Vanilla CSS, JS
 
 ---
-
-## 이상 탐지 원리 (Z-score)
-
-데이터의 분포를 분석하여 평소와 다른 '이상 거동'을 수학적으로 탐지합니다.
-
-- `Z = (현재값 - 평균) / 표준편차`
-- **|Z| >= 3.0** 이면 이상치로 판정 (정규분포 기준 상위 0.3% 수준의 희귀 케이스)
-
-## License
-MIT
+*Developed with ❤️ and AI at Jiwoo's Workspace.*

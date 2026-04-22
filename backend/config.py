@@ -20,11 +20,14 @@ class Settings(BaseSettings):
     window_seconds: int = 60  # 슬라이딩 윈도우 크기 (초)
     min_samples: int = 10  # 최소 샘플 수 (이 이하면 탐지 건너뜀)
 
-    # Slack
+    # Notifications
     slack_webhook_url: str = ""
+    n8n_webhook_url: str = ""
+
 
     # Server
     api_host: str = "0.0.0.0"
+
     api_port: int = 8000
 
     model_config = {

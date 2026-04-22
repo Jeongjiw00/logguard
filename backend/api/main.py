@@ -17,7 +17,9 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.alerting.slack import send_slack_alert
+from backend.alerting.n8n import send_n8n_webhook
 from backend.api.routes import router, set_detector
+
 from backend.api.websocket import manager
 from backend.engine.consumer import LogConsumer
 from backend.engine.detector import AnomalyDetector
@@ -43,6 +45,9 @@ async def on_anomaly_detected(alert: AnomalyAlert):
     })
     # Slack 알림
     await send_slack_alert(alert)
+    # n8n 자동화 트리거
+    await send_n8n_webhook(alert)
+
 
 
 async def stats_broadcaster():
