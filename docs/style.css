@@ -154,6 +154,34 @@ body::before {
     gap: var(--gap-lg);
 }
 
+.github-link {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-sm);
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-subtle);
+}
+
+.github-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border-color: var(--border-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.github-link svg {
+    color: currentColor;
+    opacity: 0.8;
+}
+
 .status-badge {
     display: flex;
     align-items: center;
