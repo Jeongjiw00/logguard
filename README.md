@@ -4,16 +4,21 @@
 > 단순한 분석을 넘어, 쿠버네티스 기반의 클러스터 환경과 n8n 자동화 워크플로우를 결합한 차세대 로그 감시 시스템입니다.
 
 ![Log-Guard Dashboard Preview](assets/img/dashboard.png)
+<br>
 
-## 실행 모드 (Experience Levels)
+## 🌐 Live Demo
+> **[지능형 로그 대시보드 맛보기 (클릭)](https://Jeongjiw00.github.io/logguard)**  
+> *서버 연결 없이도 작동하는 '데모 모드'가 탑재되어 있어, 브라우저에서 바로 실시간 분석 화면을 체험해 보실 수 있습니다.*
 
-### 🟢 모드 1: 로컬 통합 실행 (Easy)
+## 핵심 기능 및 배포 가이드
+
+### 1. 로컬 통합 실행 (local)
 가장 빠르게 시스템을 체험해 볼 수 있는 모드입니다. 단 한 줄의 명령어로 데이터 생성부터 대시보드 확인까지 가능합니다.
 ```bash
 python3 run.py
 ```
 
-### 🔵 모드 2: 쿠버네티스 클라우드 네이티브 (Expert)
+### 2. 쿠버네티스 클라우드 네이티브 (k8s)
 `Minikube` 기반의 로컬 클러스터에 전체 인프라를 배포하여 대규모 환경을 시뮬레이션합니다.
 - **Containerization**: Docker를 활용한 고효율 이미지 빌드.
 - **Orchestration**: Kubernetes 기반의 자동 복구 및 확장성 확보.
@@ -22,7 +27,7 @@ python3 run.py
 python3 run-k8s.py
 ```
 
-### 🟣 모드 3: Intelligent Automation (n8n)
+### 3. 지능형 자동화 모니터링 (n8n)
 이상 징후 발생 시 자동으로 대응 워크플로우를 실행하여 비즈니스 가치를 더합니다.
 - **n8n Workflow**: 이상 탐지 즉시 Webhook을 통해 자동화 시나리오 트리거.
 - **Real-time Alerting**: Gmail SMTP를 연동한 HTML 기반 보안 경고 리포트 자동 발송.
@@ -40,7 +45,7 @@ minikube service n8n-service
 
 ---
 
-## 🏗️ 시스템 아키텍처
+## 시스템 아키텍처
 
 ```mermaid
 graph TD

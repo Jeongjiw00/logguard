@@ -179,10 +179,18 @@ const errorChart = new Chart(document.getElementById('error-chart'), {
 function connect() {
     if (ws && ws.readyState === WebSocket.OPEN) return;
 
+    const demoTimeout = setTimeout(() => {
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            console.log('[Log-Guard] Server connection delayed - switching to demo mode');
+            runDemoMode();
+        }
+    }, 2000);
+
     ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
         console.log('[Log-Guard] WebSocket connected');
+        clearTimeout(demoTimeout);
         reconnectAttempts = 0;
         setConnectionStatus(true);
     };
@@ -203,6 +211,7 @@ function connect() {
     ws.onclose = () => {
         console.log('[Log-Guard] WebSocket disconnected');
         setConnectionStatus(false);
+        runDemoMode();
         scheduleReconnect();
     };
 
@@ -387,14 +396,81 @@ dom.clearAlertsBtn.addEventListener('click', () => {
 });
 
 // ─── Init ────────────────────────────────────────────────
+// ─── Demo Mode (Serverless Simulator) ───────────────────
+
+let isDemoMode = false;
+let demoInterval = null;
+
+function runDemoMode() {
+    if (isDemoMode) return;
+    isDemoMode = true;
+
+    console.log('[Log-Guard] Demo Mode Active - Simulating real-time data');
+    setConnectionStatus(false);
+    dom.statusText.textContent = 'Demo Mode';
+    dom.connectionStatus.classList.add('demo');
+
+    let totalProcessed = prevStats ? prevStats.total_processed : 0;
+    let totalAnomalies = prevStats ? prevStats.total_anomalies : 0;
+    
+    demoInterval = setInterval(() => {
+        const now = new Date();
+        const isAnomalyHit = Math.random() > 0.96; 
+        
+        const addedLogs = Math.floor(Math.random() * 15) + 5;
+        totalProcessed += addedLogs;
+        
+        const stats = {
+            total_processed: totalProcessed,
+            total_anomalies: totalAnomalies,
+            avg_latency: isAnomalyHit ? 450 + Math.random() * 500 : 40 + Math.random() * 80,
+            error_rate: isAnomalyHit ? 15 + Math.random() * 10 : 0.5 + Math.random() * 2,
+        };
+        
+        handleStats(stats);
+
+        if (isAnomalyHit) {
+            totalAnomalies++;
+            handleAnomaly({
+                anomaly_type: Math.random() > 0.5 ? 'LATENCY_SPIKE' : 'ERROR_RATE_SPIKE',
+                message: isAnomalyHit ? 'Sudden increase in response time' : 'Error rate exceeded threshold',
+                detected_at: now.toISOString(),
+                z_score: 3.0 + Math.random() * 2,
+                current_value: stats.avg_latency.toFixed(1),
+                mean: 55.4,
+                std: 12.2,
+                window_size: 60
+            });
+        }
+    }, 1000);
+}
+
+function stopDemoMode() {
+    if (!isDemoMode) return;
+    isDemoMode = false;
+    if (demoInterval) clearInterval(demoInterval);
+    dom.connectionStatus.classList.remove('demo');
+    console.log('[Log-Guard] Demo Mode Stopped - Switched to Live Data');
+}
+
+// ─── Init ────────────────────────────────────────────────
 
 updateClock();
 setInterval(updateClock, 1000);
 connect();
 
-// Send keep-alive ping
+// 주기적으로 연결 확인 및 유지
 setInterval(() => {
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send('ping');
+        stopDemoMode();
     }
 }, 15000);
+
+// Demo Mode 스타일 보조 루틴
+const style = document.createElement('style');
+style.textContent = `
+    .status-badge.demo { background: rgba(59, 130, 246, 0.2) !important; color: #60a5fa !important; border: 1px solid rgba(96, 165, 250, 0.3) !important; }
+    .status-badge.demo::before { background: #3b82f6 !important; box-shadow: 0 0 8px #3b82f6 !important; }
+`;
+document.head.appendChild(style);
