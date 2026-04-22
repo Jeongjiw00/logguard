@@ -10,7 +10,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # 소스 코드 복사 (backend 폴더 내용)
 COPY backend/ ./backend/
-COPY frontend/ ./frontend/
+COPY docs/ ./docs/
 COPY run.py .
 
 # 환경변수 설정 (K8s에서 덮어쓰기 가능)

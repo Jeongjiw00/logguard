@@ -26,8 +26,9 @@ from backend.engine.detector import AnomalyDetector
 from backend.engine.models import AnomalyAlert
 from backend.producer.generator import run_producer
 
-# 프론트엔드 디렉토리 경로
-FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend"
+# ─── 경로 설정 ───
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+DOCS_DIR = BASE_DIR / "docs"
 
 logger = logging.getLogger(__name__)
 
@@ -118,13 +119,13 @@ app.add_middleware(
 app.include_router(router)
 
 # 정적 파일 서빙 (CSS, JS)
-app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
+app.mount("/static", StaticFiles(directory=str(DOCS_DIR)), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_dashboard():
     """대시보드 메인 페이지"""
-    index_path = FRONTEND_DIR / "index.html"
+    index_path = DOCS_DIR / "index.html"
     return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
 
 
