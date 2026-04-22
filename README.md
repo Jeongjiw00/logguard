@@ -4,94 +4,86 @@
 
 서버 로그를 실시간으로 수집하고, 통계적 방법(Z-score)으로 이상 트래픽을 자동 감지하는 시스템입니다.
 
-이 프로젝트는 **Vibe Coding** 철학을 바탕으로 개발되었습니다. 개발자가 프로젝트의 전체적인 '바이브'와 기획, 수학적 직관에 집중하고, AI 비서와 실시간 협업을 통해 아이디어를 신속하게 실제 동작하는 시스템으로 구현했습니다.
+이 프로젝트는 **Vibe Coding** 철학을 바탕으로 개발되었으며, 로컬 환경을 넘어 **쿠버네티스(Kubernetes)** 클러스터 상에서의 운영 및 확장성까지 고려하여 설계되었습니다.
 
 ![Log-Guard Dashboard Preview](assets/img/dashboard.png)
 
 ## 빠른 시작
 
-가장 간단하게 시스템을 실행하는 방법입니다:
-
+### 모드 1: 로컬 통합 실행 (Easy)
 ```bash
-# 가상환경 활성화 (필요 시)
-source venv/bin/activate
-
-# 통합 서버 실행 (Redis 시작 + 백엔드 + 브라우저 열기)
+# Redis(Brew) + Backend + Browser 자동 실행
 python3 run.py
 ```
 
-## 아키텍처
+### 모드 2: 쿠버네티스 배포 (Advanced) ☸️
+```bash
+# Minikube + K8s Manifest + Image Build + Service 자동 실행
+python3 run-k8s.py
+```
 
+## 🏗️ 아키텍처 및 클라우드 네이티브 설계
+
+```mermaid
+graph LR
+    A["Log Producer"] -->|lpush| B["Redis (Queue)"]
+    B -->|brpop| C["Detection Engine"]
+    C -->|Z-score| D{"Anomaly?"}
+    D -->|Yes| E["Slack/Dashboard"]
+    
+    subgraph "Kubernetes Cluster"
+    B
+    C
+    end
 ```
-Log Producer -> Redis Queue -> Detection Engine -> Dashboard (WebSocket)
-```
+
+### Kubernetes 인프라 구성
+- **Deployment**: 백엔드 서버의 고가용성(High Availability) 보장 (Multi-replica 구성)
+- **Service (NodePort)**: 클러스터 외부와 백엔드 서버 간의 연결 통신
+- **Service Discovery**: `redis-service` 이름을 통한 내부 DNS 기반 마이크로서비스 통신
+- **Containerization**: `python:3.9-slim` 기반의 최적화된 도커 이미지
 
 ## 기술 스택
 
 - **Backend**: Python 3.9+ / FastAPI / Pandas / NumPy
 - **Frontend**: Vanilla JS / Chart.js (CDN) / CSS3 (Glassmorphism)
-- **Infrastructure**: Redis (Message Queue)
+- **Infrastructure**: **Kubernetes (Minikube)**, **Docker**, Redis
 - **Monitoring**: WebSocket Real-time Streaming, Slack Anomaly Alerts
 
 ---
 
-## 상세 설정 및 실행 가이드
+## 상세 설정 가이드
 
-### 1. 환경 설정 및 설치
-
+### 1. 환경 설정
 ```bash
-# 가상환경 생성 및 활성화
 python -m venv venv
 source venv/bin/activate
-
-# 의존성 설치
 pip install -r requirements.txt
-
-# 환경변수 설정 (Slack 알림 설정 등)
 cp .env.example .env
 ```
 
-### 2. 수동 실행 방법
-
-통합 실행기(`run.py`)를 사용하지 않을 경우:
-
+### 2. 수동 쿠버네티스 배포
+스크립트 없이 수동으로 제어하고 싶을 때:
 ```bash
-# Redis 실행
-docker compose up -d
+# YAML 파일 적용
+kubectl apply -f k8s/
 
-# 백엔드 서버 실행
-uvicorn backend.api.main:app --host 0.0.0.0 --port 8000
+# 상태 확인
+kubectl get pods
+kubectl get services
+
+# 대시보드 접속 주소 확인
+minikube service backend-service
 ```
-
-### 3. API 및 통계 확인
-
-- **Dashboard**: http://localhost:8000
-- **Swagger UI**: http://localhost:8000/docs
-- **Health Check**: http://localhost:8000/api/v1/health
-- **Recent Anomalies**: http://localhost:8000/api/v1/anomalies
 
 ---
 
-## 이상 탐지 원리 (수학적 접근)
+## 이상 탐지 원리 (Z-score)
 
-고정 임계값(예: 100req/s 초과 시 차단) 대신 데이터의 분포를 고려한 **Z-score(표준점수)** 방식을 도입했습니다. 이를 통해 트래픽 변동성에 유연하게 대응하고 오탐(False Positive)을 줄였습니다.
+데이터의 분포를 분석하여 평소와 다른 '이상 거동'을 수학적으로 탐지합니다.
 
-### Z-score 공식
-```
-Z = (x - μ) / σ
-```
-- `x`: 현재 관측값 (응답 시간, 요청 빈도 등)
-- `μ`: 슬라이딩 윈도우(60초) 내 평균
-- `σ`: 슬라이딩 윈도우 내 표준편차
-
-### 탐지 대상 메트릭
-
-| 메트릭 | 탐지 기준 | 판정 기준 |
-|--------|------|------|
-| **Latency** | 응답 시간 거동 분석 | Z >= 3.0 |
-| **Frequency** | 1초당 요청 수 분석 | Z >= 3.0 |
-| **Error Rate** | 4xx/5xx 에러율 분석 | Z >= 3.0 |
+- `Z = (현재값 - 평균) / 표준편차`
+- **|Z| >= 3.0** 이면 이상치로 판정 (정규분포 기준 상위 0.3% 수준의 희귀 케이스)
 
 ## License
-
 MIT

@@ -104,6 +104,7 @@ async def run_producer(
     last_burst_time = time.time()
 
     try:
+        logger.info("Log Producer 루프 진입 시도 중...")
         while True:
             now = time.time()
             is_burst = (now - last_burst_time) >= burst_interval
@@ -127,17 +128,20 @@ async def run_producer(
                 await r.lpush(settings.redis_queue_key, json.dumps(log_entry))
                 log_count += 1
 
-                if log_count % 100 == 0:
+
+                if log_count % 10 == 0: # 100건 -> 10건으로 조정
                     queue_len = await r.llen(settings.redis_queue_key)
-                    logger.info("로그 %d건 생성됨 | 큐 대기: %d건", log_count, queue_len)
+                    logger.info("디버그: 로그 %d건 생성됨 | 큐 대기: %d건", log_count, queue_len)
 
-                await asyncio.sleep(0.1)  # 0.1초 간격
+                await asyncio.sleep(0.1)
 
-    except asyncio.CancelledError:
-        logger.info("Log Producer 종료 - 총 %d건 생성", log_count)
-
+    except Exception as e:
+        logger.error("Log Producer 치명적 에러 발생: %s", str(e), exc_info=True)
     finally:
+        logger.info("Log Producer 종료 시퀀스 진입")
+        await r.aclose()
         await pool.aclose()
+
 
 
 if __name__ == "__main__":
